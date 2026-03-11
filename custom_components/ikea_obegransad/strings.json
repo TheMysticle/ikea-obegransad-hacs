@@ -1,0 +1,17 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "IKEA OBEGRÄNSAD",
+        "description": "Enter the IP address of your lamp.",
+        "data": {
+          "host": "IP Address"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the lamp. Check the IP address.",
+      "unknown": "Unexpected error."
+    }
+  }
+}

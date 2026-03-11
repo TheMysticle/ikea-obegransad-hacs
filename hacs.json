@@ -1,0 +1,6 @@
+{
+  "name": "IKEA OBEGRÄNSAD",
+  "content_in_root": false,
+  "render_readme": true,
+  "homeassistant": "2023.12.0"
+}
