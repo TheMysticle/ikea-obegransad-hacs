@@ -289,26 +289,54 @@ class IkeaObegransadCard extends HTMLElement {
   // ── Hold detection ────────────────────────────────────────────────────────────
 
   _onPointerDown(e) {
+    const t = e.touches?.[0] ?? e;
+    this._startX = t.clientX;
+    this._startY = t.clientY;
+    this._scrollCancelled = false;
     this._holdTriggered = false;
     this._holdTimer = setTimeout(() => {
+      if (this._scrollCancelled) return;
       this._holdTriggered = true;
       this._openPopup();
     }, 500);
   }
 
+  _onPointerMove(e) {
+    if (this._scrollCancelled || (!this._holdTimer && !this._holdTriggered)) return;
+    const t = e.touches?.[0] ?? e;
+    const dx = t.clientX - this._startX;
+    const dy = t.clientY - this._startY;
+    if (Math.sqrt(dx * dx + dy * dy) > 10) {
+      clearTimeout(this._holdTimer);
+      this._holdTimer = null;
+      this._scrollCancelled = true;
+    }
+  }
+
   _onPointerUp(e) {
     if (this._holdTimer) { clearTimeout(this._holdTimer); this._holdTimer = null; }
-    if (!this._holdTriggered) {
+    if (!this._holdTriggered && !this._scrollCancelled) {
       // Short tap = toggle
       const L = this._L;
-      if (L) this._svc("light", L.state === "on" ? "turn_off" : "turn_on", { entity_id: L.entity_id });
+      if (L) {
+        if (L.state === "on") {
+          this._svc("light", "turn_off", { entity_id: L.entity_id });
+        } else {
+          const lastBrightness = L.attributes?.brightness;
+          const params = { entity_id: L.entity_id };
+          if (lastBrightness) params.brightness = lastBrightness;
+          this._svc("light", "turn_on", params);
+        }
+      }
     }
     this._holdTriggered = false;
+    this._scrollCancelled = false;
   }
 
   _onPointerCancel() {
     if (this._holdTimer) { clearTimeout(this._holdTimer); this._holdTimer = null; }
     this._holdTriggered = false;
+    this._scrollCancelled = false;
   }
 
   // ── State sync ────────────────────────────────────────────────────────────────
@@ -657,6 +685,8 @@ class IkeaObegransadCard extends HTMLElement {
     const card = q("#main-card");
     card.addEventListener("mousedown",   e => this._onPointerDown(e));
     card.addEventListener("touchstart",  e => this._onPointerDown(e), { passive:true });
+    card.addEventListener("mousemove",   e => this._onPointerMove(e));
+    card.addEventListener("touchmove",   e => this._onPointerMove(e), { passive:true });
     card.addEventListener("mouseup",     e => this._onPointerUp(e));
     card.addEventListener("touchend",    e => this._onPointerUp(e));
     card.addEventListener("mouseleave",  e => this._onPointerCancel(e));
