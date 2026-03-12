@@ -289,26 +289,44 @@ class IkeaObegransadCard extends HTMLElement {
   // ── Hold detection ────────────────────────────────────────────────────────────
 
   _onPointerDown(e) {
+    const t = e.touches?.[0] ?? e;
+    this._startX = t.clientX;
+    this._startY = t.clientY;
+    this._scrollCancelled = false;
     this._holdTriggered = false;
     this._holdTimer = setTimeout(() => {
+      if (this._scrollCancelled) return;
       this._holdTriggered = true;
       this._openPopup();
     }, 500);
   }
 
+  _onPointerMove(e) {
+    if (this._scrollCancelled || (!this._holdTimer && !this._holdTriggered)) return;
+    const t = e.touches?.[0] ?? e;
+    const dx = t.clientX - this._startX;
+    const dy = t.clientY - this._startY;
+    if (Math.sqrt(dx * dx + dy * dy) > 10) {
+      clearTimeout(this._holdTimer);
+      this._holdTimer = null;
+      this._scrollCancelled = true;
+    }
+  }
+
   _onPointerUp(e) {
     if (this._holdTimer) { clearTimeout(this._holdTimer); this._holdTimer = null; }
-    if (!this._holdTriggered) {
-      // Short tap = toggle
+    if (!this._holdTriggered && !this._scrollCancelled) {
       const L = this._L;
-      if (L) this._svc("light", L.state === "on" ? "turn_off" : "turn_on", { entity_id: L.entity_id });
+      if (L) this._svc("light", "toggle", { entity_id: L.entity_id });
     }
     this._holdTriggered = false;
+    this._scrollCancelled = false;
   }
 
   _onPointerCancel() {
     if (this._holdTimer) { clearTimeout(this._holdTimer); this._holdTimer = null; }
     this._holdTriggered = false;
+    this._scrollCancelled = false;
   }
 
   // ── State sync ────────────────────────────────────────────────────────────────
@@ -655,9 +673,11 @@ class IkeaObegransadCard extends HTMLElement {
 
     // ── Mushroom card hold / tap ──────────────────────────────────────────────
     const card = q("#main-card");
-    card.addEventListener("mousedown",   e => this._onPointerDown(e));
-    card.addEventListener("touchstart",  e => this._onPointerDown(e), { passive:true });
-    card.addEventListener("mouseup",     e => this._onPointerUp(e));
+    card.addEventListener("mousedown",   e => { if (this._isTouchInteraction) return; this._onPointerDown(e); });
+    card.addEventListener("touchstart",  e => { this._isTouchInteraction = true; this._onPointerDown(e); }, { passive: true });
+    card.addEventListener("mousemove",   e => this._onPointerMove(e));
+    card.addEventListener("touchmove",   e => this._onPointerMove(e), { passive: true });
+    card.addEventListener("mouseup",     e => { if (this._isTouchInteraction) { this._isTouchInteraction = false; return; } this._onPointerUp(e); });
     card.addEventListener("touchend",    e => this._onPointerUp(e));
     card.addEventListener("mouseleave",  e => this._onPointerCancel(e));
     card.addEventListener("touchcancel", e => this._onPointerCancel(e));
@@ -671,7 +691,7 @@ class IkeaObegransadCard extends HTMLElement {
     // ── Power toggle ──────────────────────────────────────────────────────────
     q("#pt").addEventListener("change", e => {
       const L = this._L; if (!L) return;
-      this._svc("light", e.target.checked ? "turn_on" : "turn_off", { entity_id: L.entity_id });
+      this._svc("light", "toggle", { entity_id: L.entity_id });
     });
 
     // ── Brightness ────────────────────────────────────────────────────────────
