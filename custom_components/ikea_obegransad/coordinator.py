@@ -70,6 +70,7 @@ class IkeaObegransadCoordinator:
                 # Seed initial state from REST before WS connects
                 self.data = {
                     "brightness": info.get("brightness", 0),
+                    "power": info.get("power", False),
                     "plugin": info.get("plugin", 0),
                     "status": info.get("status", "unknown"),
                     "scheduleActive": info.get("scheduleActive", False),
@@ -98,6 +99,7 @@ class IkeaObegransadCoordinator:
                             if event in ("info", "minimal-info"):
                                 self.data = {
                                     "brightness": msg.get("brightness", self.data.get("brightness", 0)),
+                                    "power": msg.get("power", self.data.get("power", False)),
                                     "plugin": msg.get("plugin", self.data.get("plugin", 0)),
                                     "status": msg.get("status", self.data.get("status", "unknown")),
                                     "scheduleActive": msg.get("scheduleActive", self.data.get("scheduleActive", False)),
@@ -121,6 +123,10 @@ class IkeaObegransadCoordinator:
                     await asyncio.sleep(RECONNECT_INTERVAL)
 
     # --- REST command helpers ---
+
+    async def async_set_power(self, state: bool) -> None:
+        val = 1 if state else 0
+        await self._patch(f"/api/power?state={val}")
 
     async def async_set_brightness(self, brightness: int) -> None:
         await self._patch(f"/api/brightness?value={brightness}")

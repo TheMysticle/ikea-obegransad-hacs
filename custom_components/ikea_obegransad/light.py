@@ -43,15 +43,18 @@ class IkeaObegransadLight(LightEntity):
 
     @property
     def is_on(self) -> bool:
-        return self._coordinator.data.get("brightness", 0) > 0
+        return self._coordinator.data.get("power", False)
 
     @property
     def brightness(self) -> int:
         return self._coordinator.data.get("brightness", 0)
 
     async def async_turn_on(self, **kwargs) -> None:
-        brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
-        await self._coordinator.async_set_brightness(brightness)
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            await self._coordinator.async_set_brightness(brightness)
+        else:
+            await self._coordinator.async_set_power(True)
 
     async def async_turn_off(self, **kwargs) -> None:
-        await self._coordinator.async_set_brightness(0)
+        await self._coordinator.async_set_power(False)
