@@ -53,27 +53,19 @@ class IkeaObegransadCardEditor extends HTMLElement {
         <h4>Entities</h4>
         <div class="row">
           <label>Light entity</label>
-          <ha-entity-picker id="entity_light" .hass=${this._hass}
-            .value="${v("entity_light")}" .includeDomains=${["light"]} allow-custom-entity>
-          </ha-entity-picker>
+          <ha-entity-picker id="entity_light" allow-custom-entity></ha-entity-picker>
         </div>
         <div class="row">
           <label>Plugin select entity</label>
-          <ha-entity-picker id="entity_select" .hass=${this._hass}
-            .value="${v("entity_select")}" .includeDomains=${["select"]} allow-custom-entity>
-          </ha-entity-picker>
+          <ha-entity-picker id="entity_select" allow-custom-entity></ha-entity-picker>
         </div>
         <div class="row">
           <label>Scroll text entity</label>
-          <ha-entity-picker id="entity_text" .hass=${this._hass}
-            .value="${v("entity_text")}" .includeDomains=${["text"]} allow-custom-entity>
-          </ha-entity-picker>
+          <ha-entity-picker id="entity_text" allow-custom-entity></ha-entity-picker>
         </div>
         <div class="row">
           <label>Clear button entity</label>
-          <ha-entity-picker id="entity_button" .hass=${this._hass}
-            .value="${v("entity_button")}" .includeDomains=${["button"]} allow-custom-entity>
-          </ha-entity-picker>
+          <ha-entity-picker id="entity_button" allow-custom-entity></ha-entity-picker>
         </div>
         <h4>Appearance</h4>
         <div class="row">
@@ -82,14 +74,25 @@ class IkeaObegransadCardEditor extends HTMLElement {
         </div>
       </div>`;
 
+    const initPicker = (id, domain, val) => {
+      const el = this.shadowRoot.querySelector("#" + id);
+      if (el) {
+        el.hass = this._hass;
+        el.value = val;
+        el.includeDomains = [domain];
+        el.addEventListener("value-changed", () => this._fire());
+      }
+    };
+
+    initPicker("entity_light", "light", v("entity_light"));
+    initPicker("entity_select", "select", v("entity_select"));
+    initPicker("entity_text", "text", v("entity_text"));
+    initPicker("entity_button", "button", v("entity_button"));
+
     this.shadowRoot.querySelector("#host")
       ?.addEventListener("change", () => this._fire());
     this.shadowRoot.querySelector("#name")
       ?.addEventListener("change", () => this._fire());
-    ["entity_light","entity_select","entity_text","entity_button"].forEach(id =>
-      this.shadowRoot.querySelector("#" + id)
-        ?.addEventListener("value-changed", () => this._fire())
-    );
   }
 
   _fire() {

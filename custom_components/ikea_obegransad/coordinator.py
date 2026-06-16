@@ -146,7 +146,8 @@ class IkeaObegransadCoordinator:
         session = async_get_clientsession(self.hass)
         try:
             async with async_timeout.timeout(5):
-                await session.patch(f"http://{self.host}{path}")
+                async with session.patch(f"http://{self.host}{path}") as resp:
+                    await resp.read()
         except Exception as err:
             _LOGGER.error("PATCH %s failed: %s", path, err)
 
@@ -154,6 +155,7 @@ class IkeaObegransadCoordinator:
         session = async_get_clientsession(self.hass)
         try:
             async with async_timeout.timeout(5):
-                await session.get(f"http://{self.host}{path}")
+                async with session.get(f"http://{self.host}{path}") as resp:
+                    await resp.read()
         except Exception as err:
             _LOGGER.error("GET %s failed: %s", path, err)
