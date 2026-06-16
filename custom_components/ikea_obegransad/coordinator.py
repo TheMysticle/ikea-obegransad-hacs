@@ -147,6 +147,7 @@ class IkeaObegransadCoordinator:
         try:
             async with async_timeout.timeout(5):
                 async with session.patch(f"http://{self.host}{path}") as resp:
+                    resp.raise_for_status()
                     await resp.read()
         except Exception as err:
             _LOGGER.error("PATCH %s failed: %s", path, err)
@@ -156,6 +157,7 @@ class IkeaObegransadCoordinator:
         try:
             async with async_timeout.timeout(5):
                 async with session.get(f"http://{self.host}{path}") as resp:
+                    resp.raise_for_status()
                     await resp.read()
         except Exception as err:
             _LOGGER.error("GET %s failed: %s", path, err)
